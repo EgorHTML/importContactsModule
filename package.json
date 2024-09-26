@@ -1,0 +1,38 @@
+{
+  "name": "vue-plugin-skeleton",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "saas": "vite build --mode saas",
+    "box_dev": "vite build --mode box_dev",
+    "saas_dev": "vite build --mode saas_dev"
+  },
+  "dependencies": {
+    "element-plus": "^2.8.3",
+    "vue": "^3.2.47",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^1.0.1",
+    "@vitejs/plugin-vue": "^3.2.0",
+    "eslint": "^8.33.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-vue": "^9.9.0",
+    "prettier": "2.7.1",
+    "sass": "^1.58.0",
+    "unplugin-auto-import": "^0.11.4",
+    "unplugin-element-plus": "^0.4.1",
+    "unplugin-icons": "^0.14.13",
+    "unplugin-vue-components": "^0.22.9",
+    "vite": "^3.2.3",
+    "vite-plugin-css-injected-by-js": "^2.4.0",
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-plugin-mkcert": "^1.13.3",
+    "vite-plugin-singlefile": "^0.13.3"
+  }
+}
