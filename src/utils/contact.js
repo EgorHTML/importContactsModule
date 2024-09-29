@@ -35,6 +35,22 @@ export function createContact(user) {
   return makeRequest(data)
 }
 
+export async function getAllContactCustomFields() {
+  let totalPages = 1
+  const allContactCustomFields = []
+
+  for (let i = 1; i <= totalPages; i++) {
+    const fieldsData = await getContactCustomFields(i)
+    const fields = fieldsData.data
+
+    allContactCustomFields.push(...Object.values(fields))
+
+    totalPages = fieldsData.pagination.total_pages
+  }
+
+  return allContactCustomFields
+}
+
 async function getContactCustomFields(page = 1) {
   const data = {
     url: `${window.location.origin}/api/v2/users/custom_fields/?page=${page}`,

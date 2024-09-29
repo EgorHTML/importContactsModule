@@ -2,14 +2,10 @@
 import { computed, inject, ref, onMounted } from 'vue'
 import { utils } from 'xlsx'
 import TableSelectsBlock from './TableSelectsBlock.vue'
-import { getContactCustomFieldByName, createContact } from '../utils/contact.js'
+import { createContact, getAllContactCustomFields } from '../utils/contact.js'
 import makeRequest from '../utils/request.js'
-import { sleep, normalizeMatrix, findMaxLength } from '../utils/helpers.js'
+import { normalizeMatrix, findMaxLength } from '../utils/helpers.js'
 import TableBlock from './TableBlock.vue'
-
-const RPM = 250
-const secondsInMinute = 60
-const sleepPerRequest = (secondsInMinute / RPM) * 1000
 
 const file = inject('file')
 
@@ -77,20 +73,42 @@ const sheetRowsNormalized = computed(() =>
 const bodyTable = computed(() => sheetRowsNormalized.value.slice(1))
 
 onMounted(async () => {
-  departments.value = (
-    await makeRequest({
-      url: `${window.location.origin}/api/v2/departments/`,
-    })
-  ).data
+  departments.value = await getDepartments()
 
-  groups.value = (
-    await makeRequest({
-      url: `${window.location.origin}/api/v2/groups/`,
-    })
-  ).data
+  groups.value = await getGroups()
 
-  //
+  fields.value = [...fields.value, ...(await getAllCustomFieldsForSelect())]
 })
+
+async function getAllCustomFieldsForSelect() {
+  const customFields = await getAllContactCustomFields()
+
+  const customFieldsForSelect = customFields.map((field) => {
+    return {
+      label: field.name.ru || field.name.en || field.name.ua || 'Неизвестно',
+      value: field.id,
+      selected: false,
+      required: false,
+      basicField: false,
+    }
+  })
+
+  return customFieldsForSelect
+}
+
+async function getGroups() {
+  const groups = await makeRequest({
+    url: `${window.location.origin}/api/v2/groups/`,
+  })
+  return groups.data
+}
+
+async function getDepartments() {
+  const departments = await makeRequest({
+    url: `${window.location.origin}/api/v2/departments/`,
+  })
+  return departments.data
+}
 
 async function importContacts() {
   progress.value = 0
@@ -99,17 +117,6 @@ async function importContacts() {
   const basicSelectValues = selectValues.value
     .filter((value) => value.basicField)
     .map((proxy) => proxy.value)
-  const customSelectValues = selectValues.value
-    .filter((value) => !value.basicField)
-    .map((proxy) => proxy.value)
-
-  const contactCustomFieldsByName = []
-
-  for (let i = 0; i < customSelectValues.length; i++) {
-    contactCustomFieldsByName.push(
-      await getContactCustomFieldByName(customSelectValues[i])
-    )
-  }
 
   for (let i = 0; i < bodyTable.value.length; i++) {
     const contactRow = bodyTable.value[i]
@@ -118,23 +125,23 @@ async function importContacts() {
     user.department = [...department.value]
     user.group_id = groupId.value
 
-    basicSelectValues.forEach(
-      (field) =>
-        (user[field] = contactRow[getIndexOfFields(selectValues.value, field)])
-    )
+    basicSelectValues.forEach((field) => {
+      const selectField = fields.value.find(
+        (selectField) => selectField.value == field
+      )
+
+      if (selectField.basicField) {
+        user[field] = contactRow[getIndexOfFields(selectValues.value, field)]
+      } else if (!selectField.basicField) {
+        user.custom_fields[field] =
+          contactRow[getIndexOfFields(selectValues.value, field)]
+      }
+    })
 
     user.email = `${user.phone}@helpdeskeddy.com`
     user.password = user.email
 
-    for (let i = 0; i < customSelectValues.length; i++) {
-      const selectField = customSelectValues[i]
-      const contactCustomField = contactCustomFieldsByName[i]
-
-      if (contactCustomField)
-        user.custom_fields[contactCustomField.id] =
-          contactRow[getIndexOfFields(selectValues.value, selectField)]
-    }
-    createContact(user).catch((error) => {
+    await createContact(user).catch((error) => {
       const jsonErrors = JSON.parse(error.message)
       console.warn(jsonErrors)
       missedUsers.value = [
@@ -143,9 +150,8 @@ async function importContacts() {
         [user.name, user.phone, user.email, jsonErrors[0].details],
       ]
     })
-    progress.value = ((i + 1) / bodyTable.value.length) * 100
 
-    await sleep(sleepPerRequest)
+    progress.value = ((i + 1) / bodyTable.value.length) * 100
   }
 }
 
