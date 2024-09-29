@@ -24,28 +24,31 @@ const startRow = ref(1)
 const progress = ref(0)
 const missedUsers = ref([])
 
-const basicFields = ref([
+const fields = ref([
   {
     label: 'Имя',
     value: 'name',
     selected: false,
     required: true,
+    basicField: true,
   },
   {
     label: 'Компания',
     value: 'organization',
     selected: false,
     required: false,
+    basicField: true,
   },
   {
     label: 'Телефон',
     value: 'phone',
     selected: false,
     required: true,
+    basicField: true,
   },
 ])
 const noSelectedRequiredFields = computed(() =>
-  basicFields.value.filter((field) => field.required && !field.selected)
+  fields.value.filter((field) => field.required && !field.selected)
 )
 
 const requiredConditions = computed(() => {
@@ -85,6 +88,8 @@ onMounted(async () => {
       url: `${window.location.origin}/api/v2/groups/`,
     })
   ).data
+
+  //
 })
 
 async function importContacts() {
@@ -154,7 +159,7 @@ function goBack() {
 
 function updateSelects(table) {
   selectValues.value = table.selects
-  basicFields.value = table.fields
+  fields.value = table.fields
 }
 </script>
 
@@ -207,7 +212,7 @@ function updateSelects(table) {
     </div>
 
     <TableSelectsBlock
-      :basic-fields="basicFields"
+      :basic-fields="fields"
       :sheet-rows="sheetRowsNormalized"
       @update-table="updateSelects"
     />

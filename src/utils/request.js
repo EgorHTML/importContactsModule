@@ -1,4 +1,10 @@
+/* eslint-disable no-unused-vars */
 import HDE from '../plugin/index'
+import { sleep } from './helpers.js'
+
+const RPM = 250
+const secondsInMinute = 60
+const sleepPerRequestInMili = (secondsInMinute / RPM) * 1000
 
 export default async function makeRequest(data) {
   let { url, method, body, contentType } = data
@@ -16,6 +22,8 @@ export default async function makeRequest(data) {
   ).data
 
   if (request.errors) throw new Error(JSON.stringify(request.errors))
+
+  await sleep(sleepPerRequestInMili)
 
   return request
 }

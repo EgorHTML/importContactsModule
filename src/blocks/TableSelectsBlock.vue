@@ -28,14 +28,20 @@ const selectValues = computed(() => {
 
 function change() {
   const selectedValues = [...selectLabels.value]
+  const fields = props.basicFields.map((field) => {
+    const selectedValue = selectedValues.includes(field.label)
+
+    return { ...field, selected: selectedValue }
+  })
+
   emit('updateTable', {
     selects: selectValues.value,
-    fields: props.basicFields.map((field) => {
-      const selectedValue = selectedValues.includes(field.label)
-
-      return { ...field, selected: selectedValue }
-    }),
+    fields: fields,
   })
+}
+
+function remoteMethod(query) {
+  console.log(query, 'query')
 }
 </script>
 
@@ -50,10 +56,12 @@ function change() {
       >
         <el-select
           v-model="selectLabels[i]"
-          placeholder="Кастомное"
+          :remote-method="remoteMethod"
+          placeholder="Выбрать"
           style="min-width: 100px"
           clearable
           :value-on-clear="''"
+          filterable
           @change="change"
         >
           <el-option
